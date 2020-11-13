@@ -19,14 +19,22 @@ const errorEmail = document.querySelector(".email-error");
 const userBar = document.querySelector(".user");
 const userNameProfile = document.querySelector(".user-name");
 const exitBtn = document.querySelector(".exit");
+const editBtn = document.querySelector(".edit");
+const editFormContainer = document.querySelector(".edit-container");
+const editUserName = document.querySelector(".edit-username");
+const editPhotoUrl = document.querySelector(".edit-photo");
+const userAvatar = document.querySelector(".user-avatar");
+
+const postsContainer = document.querySelector(".posts");
 
 const toggleAuth = ()=> {
 	const user = setUsers.user;
 
 	if(user) {
 		loginbar.style.display = "none";
-		userBar.style.display = "flex";
+		userBar.style.display = "block";
 		userNameProfile.innerHTML = user.displayName;
+		userAvatar.src = user.photo || userAvatar.src;
 
 	} else {
 		loginbar.style.display = "block";
@@ -68,8 +76,9 @@ const setUsers = {
 			errorEmail.innerHTML = "Пароль неверный, попробуйте еще раз!";
 		}
 	},
-	logOut() {
-		console.log("Выход");
+	logOut(handler) {
+		this.user = null;
+		handler();
 	},
 	signUp(email, password, handler) { 
 
@@ -87,7 +96,7 @@ const setUsers = {
 				errorEmail.innerHTML = "Введите правильный email!!";
 				return;
 			}
-			
+
 		if(!this.getUser(email)) {
 			const user = {email, password, displayName: renameDisplayName(email)}
 			users.push(user);
@@ -103,35 +112,68 @@ const setUsers = {
 	},
 	authorizedUser(user) {
 		this.user = user;
+	},
+	editUser(userName, userPhoto, handler	) {
+			if(userName) {
+				this.user.displayName = userName;
+			}
+			if(userPhoto) {
+				this.user.photo = userPhoto;
+			}
+			handler();
 	}
 };
 
-form.addEventListener("submit", (e) => {
-	e.preventDefault();
 
-	const email = emailInput.value;
-	const password = passInput.value;
+const showAllPosts = ()=> {
+	postsContainer.innerHTML = "ТУТ БУДУТ ВЫВОДИТСЯ ПОСТЫ!";
+}
 
-	setUsers.login(email, password, toggleAuth);
+const init = ()=> {
+	form.addEventListener("submit", (e) => {
+		e.preventDefault();
+	
+		const email = emailInput.value;
+		const password = passInput.value;
+	
+		setUsers.login(email, password, toggleAuth);
+		form.reset();
+	
+	});
+	loginSignup.addEventListener("click", (e) => {
+		e.preventDefault();
+	
+		const email = emailInput.value;
+		const password = passInput.value;
+	
+		setUsers.signUp(email, password, toggleAuth, renameDisplayName);
+		form.reset();
+	
+	});
+	exitBtn.addEventListener('click', (e)=> {
+		e.preventDefault();
+		
+		setUsers.logOut(toggleAuth);
+	})
+	editBtn.addEventListener('click', (e)=> {
+		e.preventDefault();
+	
+		editFormContainer.classList.toggle('visible');
+		editUserName.value = setUsers.user.displayName;
+	})
+	
+	editFormContainer.addEventListener('submit', (e)=>{
+		e.preventDefault();
+	
+		setUsers.editUser(editUserName.value, editPhotoUrl.value, toggleAuth);
+		editFormContainer.classList.remove("visible");
+	})
 
-});
-loginSignup.addEventListener("click", (e) => {
-	e.preventDefault();
 
-	const email = emailInput.value;
-	const password = passInput.value;
 
-	setUsers.signUp(email, password, toggleAuth, renameDisplayName);
-	form.reset();
+	showAllPosts();
+	toggleAuth();
+}
+	document.addEventListener('DOMContentLoaded', init );
 
-});
-exitBtn.addEventListener('click', (e)=> {
-	e.preventDefault();
-
-	loginbar.style.display = "";
-	userBar.style.display = "none";
-	errorEmail.style.display = "none";
-	form.reset();
-})
-toggleAuth();
 
